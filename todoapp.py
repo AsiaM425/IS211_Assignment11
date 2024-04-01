@@ -1,37 +1,44 @@
-from flask import Flask, render_template, request, redirect, url_for
-import re
+from flask import Flask, render_template, request, redirect
 
 app = Flask(__name__)
 
-todo_list = []
+# Fake list of To-Do items for testing
+todo_list = [
+    {"task": "Buy Milk", "email": "example@example.com", "priority": "High"},
+    {"task": "Walk the Dog", "email": "test@example.com", "priority": "Medium"}
+]
 
 @app.route('/')
-def show_todo_list():
-    return render_template('index.html', todo_list=todo_list)
+def view_todo_list():
+    return render_template('todo_list.html', todo_list=todo_list)
 
 @app.route('/submit', methods=['POST'])
-def submit_todo():
+def submit_todo_item():
+    # Get form data
     task = request.form['task']
     email = request.form['email']
     priority = request.form['priority']
 
-    # validate email using regular expression
-    email_regex = r"[^@]+@[..^@]+\.[^@]+"
-    if not re.match(email_regex, email):
-        return redirect(url_for('show_todo_list'))
+    # Data validation
+    if not task or not email or not priority:
+        # Redirect back to main controller with error message
+        return redirect('/', error='All fields are required')
 
-    # validate priority
-    if priority not in ['Low', 'Medium', 'High']:
-        return redirect(url_for('show_todo_list'))
+    # Add new To-Do item to the list
+    new_item = {"task": task, "email": email, "priority": priority}
+    todo_list.append(new_item)
 
-    todo_list.append((task, email, priority))
-    return redirect(url_for('show_todo_list'))
+    # Redirect back to main controller
+    return redirect('/')
 
 @app.route('/clear')
 def clear_todo_list():
-    global todo_list
-    todo_list = []
-    return redirect(url_for('show_todo_list'))
+    # Clear the list of To-Do items
+    todo_list.clear()
+
+    # Redirect back to main controller
+    return redirect('/')
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)
+
